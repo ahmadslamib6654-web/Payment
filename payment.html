@@ -6,78 +6,24 @@
   <title>بوابة الدفع الآمنة</title>
   <script src="https://js.stripe.com/v3/"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      direction: rtl;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 0;
-    }
-    header, footer {
-      background-color: #004080;
-      color: white;
-      text-align: center;
-      padding: 20px 0;
-    }
-    main {
-      padding: 20px;
-    }
-    form {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px;
-      width: 100%;
-      background-color: #004080;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    .card-logos {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-    .card-logos img {
-      height: 50px;
-    }
+    body { font-family: Arial; direction: rtl; background:#f5f5f5; margin:0; padding:0; }
+    header, footer { background:#004080; color:white; text-align:center; padding:20px 0; }
+    main { padding:20px; }
+    form { background:white; padding:20px; border-radius:8px; max-width:500px; margin:auto; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+    input { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; }
+    button { margin-top:20px; padding:10px; width:100%; background:#004080; color:white; border:none; border-radius:4px; font-size:16px; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="card-logos">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa Logo" />
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="MasterCard Logo" />
-  </div>
+  <h2>بوابة الدفع الآمنة</h2>
 </header>
 
 <main>
   <form id="paymentForm">
     <label for="confirmBooking">تأكيد رقم الحجز (6 أرقام):</label>
-    <input type="text" id="confirmBooking" minlength="6" maxlength="6" required oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-
-    <p id="lengthError" style="color:red; display:none;">
-      ❗ رقم الحجز يجب أن يتكون من 6 أرقام فقط.
-    </p>
-
+    <input type="text" id="confirmBooking" required minlength="6" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
     <button type="submit">ادفع الآن</button>
   </form>
 </main>
@@ -87,33 +33,22 @@
 </footer>
 
 <script>
-const stripe = Stripe("pk_test_XXXXXXXXXXXXXXXXXXXXXXXX"); // ضع هنا مفتاح Stripe العام الخاص بك
+const stripe = Stripe("pk_test_XXXXXXXXXXXXXXXXXXXX"); // ضع هنا مفتاح Stripe العام
 
-document.getElementById("paymentForm").addEventListener("submit", async function(e) {
+document.getElementById("paymentForm").addEventListener("submit", async e => {
   e.preventDefault();
+  const booking = document.getElementById("confirmBooking").value;
+  if (booking.length !== 6) { alert("رقم الحجز يجب أن يتكون من 6 أرقام"); return; }
 
-  const confirmBooking = document.getElementById("confirmBooking").value;
-  const lengthError = document.getElementById("lengthError");
-  lengthError.style.display = "none";
-
-  if (confirmBooking.length !== 6) {
-    lengthError.style.display = "block";
-    return;
-  }
-
-  // نرسل المستخدم إلى صفحة الدفع الآمن في Stripe
   const response = await fetch("/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bookingNumber: confirmBooking })
+    method:"POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ bookingNumber: booking })
   });
 
   const session = await response.json();
   const result = await stripe.redirectToCheckout({ sessionId: session.id });
-
-  if (result.error) {
-    alert(result.error.message);
-  }
+  if(result.error) alert(result.error.message);
 });
 </script>
 
