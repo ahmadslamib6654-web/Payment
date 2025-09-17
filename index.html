@@ -1,25 +1,111 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>دفع آمن</title>
-  <style>
-    body { text-align:center; font-family:sans-serif; margin-top:50px; }
-    button { padding:15px 30px; font-size:18px; cursor:pointer; background-color:#5469d4; color:white; border:none; border-radius:8px; }
-    button:hover { background-color:#4353b3; }
-  </style>
-</head>
-<body>
-  <h2>اختبار الدفع</h2>
-  <button onclick="payNow()">ادفع الآن</button>
+const express = require('express');
+const axios = require('axios');
 
-  <script>
-    function payNow() {
-      // ضع هنا رابط الدفع الذي نسخته من Stripe
-      const stripeLink = "YOUR_STRIPE_LINK";
-      window.location.href = stripeLink;
-    }
-  </script>
-</body>
-</html>
+// --- ابدأ قسم الإعدادات ---
+// استبدل بمفاتيحك الحقيقية
+const STRIPE_SECRET_KEY = 'sk_test_YOUR_SECRET_KEY';
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_PUBLISHABLE_KEY';
+const STRIPE_WEBHOOK_SECRET = 'whsec_...'; // ستحصل عليه من Stripe CLI أو لوحة التحكم
+
+// معلومات بوت تليجرام
+const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN';
+const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID';
+
+const YOUR_DOMAIN = 'http://localhost:3000';
+const PORT = 3000;
+// --- انتهى قسم الإعدادات ---
+
+const stripe = require('stripe')(STRIPE_SECRET_KEY);
+const app = express();
+
+// دالة لإرسال رسالة إلى تليجرام
+const sendTelegramNotification = async (message) => {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  try {
+    await axios.post(url, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message,
+      parse_mode: 'Markdown' // لتنسيق الرسالة بشكل أفضل
+    });
+    console.log('تم إرسال إشعار تليجرام بنجاح.');
+  } catch (error) {
+    console.error('فشل إرسال إشعار تليجرام:', error.response ? error.response.data : error.message);
+  }
+};
+
+// نقطة نهاية خاصة بالـ Webhook - لا تستخدم express.json() قبلها
+app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error(`Webhook Error: ${err.message}`);
+    await sendTelegramNotification(`⚠️ خطأ في التحقق من Webhook: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // التعامل مع حدث الدفع الناجح
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    
+    // استخراج البيانات
+    const customerName = session.metadata.customer_name;
+    const customerEmail = session.customer_details.email;
+    const amountTotal = (session.amount_total / 100).toFixed(2); // تحويل من سنت إلى دولار
+    const currency = session.currency.toUpperCase();
+    const paymentId = session.payment_intent;
+
+    // إنشاء رسالة منسقة
+    const message = `
+✅ **عملية دفع ناجحة** ✅
+
+*الاسم:* ${customerName}
+*البريد الإلكتروني:* ${customerEmail}
+*المبلغ:* *${amountTotal} ${currency}*
+*معرف العملية:* \`${paymentId}\`
+`;
+    
+    // إرسال الإشعار
+    await sendTelegramNotification(message);
+  }
+
+  res.json({received: true});
+});
+
+// استخدام express.json() لباقي المسارات
+app.use(express.json());
+app.use(express.static('.'));
+
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'منتج رقمي مميز' },
+          unit_amount: 2000,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${YOUR_DOMAIN}/success.html`,
+      cancel_url: `${YOUR_DOMAIN}/cancel.html`,
+      // تمرير البيانات الإضافية هنا
+      customer_email: email,
+      metadata: {
+        customer_name: name
+      }
+    });
+
+    res.json({ sessionId: session.id, publishableKey: STRIPE_PUBLISHABLE_KEY });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(PORT, () => console.log(`الخادم يعمل على http://localhost:${PORT}`));
